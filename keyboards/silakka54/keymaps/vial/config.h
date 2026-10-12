@@ -10,5 +10,10 @@
 // mouse keys constant speed with tap to select speed
 // https://docs.qmk.fm/features/mouse_keys#constant-mode
 #define MK_3_SPEED
+#define MK_C_OFFSET_1 8
+
+// enable Speculative Hold
+// https://docs.qmk.fm/tap_hold#speculative-hold
+// #define SPECULATIVE_HOLD
 
 // #define MASTER_RIGHT
