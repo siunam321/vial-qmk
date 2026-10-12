@@ -9,7 +9,8 @@ env:
   REGEX_ANSI_COLOR: 's/\x1b\[[0-9;]*[mGKHF]//g'
   REGEX_MAKE_OUTPUT: '/^g*make\[1]: \(Enter\|Leav\)ing directory ''/d'
 
-permissions: {}
+permissions:
+  contents: read
 
 jobs:
   check-uid:
@@ -28,7 +29,7 @@ jobs:
   build-default:
     name: Build default keymaps for Vial
     runs-on: ubuntu-latest
-    container: ghcr.io/qmk/qmk_cli@sha256:2dc05fc9f32efebd6b05c2b8676ee548358bc7e151e9dbf4dac6b6eed4513b07 
+    container: ghcr.io/qmk/qmk_cli@sha256:2dc05fc9f32efebd6b05c2b8676ee548358bc7e151e9dbf4dac6b6eed4513b07
     env:
       KEYMAP: default
 
@@ -39,11 +40,32 @@ jobs:
         persist-credentials: false
         submodules: recursive
 
+    - name: (actions) Checkout holykeebs userspace overlay
+      uses: actions/checkout@v4
+      with:
+        repository: holykeebs/qmk-userspace
+        ref: hk-master
+        path: qmk-userspace
+        persist-credentials: false
+
     - name: Build
       id: build
       run: |
         git config --global --add safe.directory $(pwd)
-        if ! qmk mass-compile -j $(nproc) $(qmk find -km vial | sed "s/:vial$/:${KEYMAP}/");
+        # The holykeebs userspace overlay checked out above. Resolved at runtime
+        # from GITHUB_WORKSPACE: ${{ github.workspace }} would give the host
+        # path, which doesn't exist inside this container. The Makefile exports
+        # the variable to the keyboard sub-make.
+        export QMK_USERSPACE="${GITHUB_WORKSPACE}/qmk-userspace"
+        # Only the holykeebs boards are maintained in this fork;
+        # upstream vial keyboards are not our concern and building all of them
+        # takes ~2h.
+        targets=$(qmk find -km vial | grep -E '^holykeebs/' | sed "s/:vial$/:${KEYMAP}/")
+        if [ -z "${targets}" ]; then
+          echo "::error::no holykeebs vial targets found"
+          exit 1
+        fi
+        if ! qmk mass-compile -j $(nproc) ${targets};
           then
           echo "::error::$(ls -1 .build/failed.log.* | wc -l) keymaps failed to build. See logs and/or job summary for details."
           exit 1
@@ -66,7 +88,7 @@ jobs:
   build-vial:
     name: Build Vial keymaps
     runs-on: ubuntu-latest
-    container: ghcr.io/qmk/qmk_cli@sha256:2dc05fc9f32efebd6b05c2b8676ee548358bc7e151e9dbf4dac6b6eed4513b07 
+    container: ghcr.io/qmk/qmk_cli@sha256:2dc05fc9f32efebd6b05c2b8676ee548358bc7e151e9dbf4dac6b6eed4513b07
     env:
       KEYMAP: vial
 
@@ -77,11 +99,27 @@ jobs:
         persist-credentials: false
         submodules: recursive
 
+    - name: (actions) Checkout holykeebs userspace overlay
+      uses: actions/checkout@v4
+      with:
+        repository: holykeebs/qmk-userspace
+        ref: hk-master
+        path: qmk-userspace
+        persist-credentials: false
+
     - name: Build
       id: build
       run: |
         git config --global --add safe.directory $(pwd)
-        if ! qmk mass-compile -km "${KEYMAP}" -j $(nproc);
+        # See build-default: the userspace overlay, resolved inside the container.
+        export QMK_USERSPACE="${GITHUB_WORKSPACE}/qmk-userspace"
+        # See build-default: holykeebs boards only.
+        targets=$(qmk find -km "${KEYMAP}" | grep -E '^holykeebs/')
+        if [ -z "${targets}" ]; then
+          echo "::error::no holykeebs vial targets found"
+          exit 1
+        fi
+        if ! qmk mass-compile -j $(nproc) ${targets};
           then
           echo "::error::$(ls -1 .build/failed.log.* | wc -l) keymaps failed to build. See logs and/or job summary for details."
           exit 1
