@@ -12,6 +12,8 @@
 #define MK_3_SPEED
 #define MK_C_OFFSET_1 8
 
+#define DYNAMIC_MACRO_NO_NESTING
+
 // enable Speculative Hold
 // https://docs.qmk.fm/tap_hold#speculative-hold
 // #define SPECULATIVE_HOLD
