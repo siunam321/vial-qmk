@@ -39,8 +39,11 @@ endif
 endif
 
 # Try to determine userspace from qmk config, if set.
+# qmk CLI (milc) >= 1.2 annotates values with their source, e.g.
+# `user.overlay_dir=/path (config)`. Strip the trailing `( ... )` annotation,
+# matching upstream qmk_firmware.
 ifeq ($(QMK_USERSPACE),)
-    QMK_USERSPACE = $(shell qmk config -ro user.overlay_dir | cut -d= -f2 | sed -e 's@^None$$@@g')
+    QMK_USERSPACE = $(shell qmk config -ro user.overlay_dir | cut -d= -f2 | sed -e 's@ [(].*[)]$$@@g' -e 's@^None$$@@g')
 endif
 # Export so the recursive keyboard sub-make (build_keyboard.mk) sees it; without
 # this the External Userspace overlay isn't wired into the build. Matches

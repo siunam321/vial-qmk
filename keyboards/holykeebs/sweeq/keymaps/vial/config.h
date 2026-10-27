@@ -3,8 +3,9 @@
 
 #pragma once
 
-// Good defaults for home row modifiers
-#define TAPPING_TERM 230
+#define DYNAMIC_KEYMAP_LAYER_COUNT 8
+
+#define TAPPING_TERM 150
 
 // Vial identity and unlock combo. VIAL_INSECURE lives in the shared userspace
 // config (users/holykeebs/config.h), so it is intentionally not repeated here.
@@ -14,3 +15,8 @@
 #define VIAL_KEYBOARD_UID {0x58, 0x28, 0x0C, 0xA7, 0x9E, 0xCF, 0x7C, 0x3D}
 #define VIAL_UNLOCK_COMBO_ROWS { 0, 4 }
 #define VIAL_UNLOCK_COMBO_COLS { 0, 0 }
+
+#define MK_3_SPEED
+#define MK_C_OFFSET_1 8
+
+#define DYNAMIC_MACRO_NO_NESTING
